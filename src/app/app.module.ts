@@ -8,38 +8,49 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import {
   DeviceListComponent,
-  DeviceDetailComponent
+  DeviceDetailComponent,
+  DeviceListCardComponent,
 } from './device';
 
 import {
   NavMenuComponent,
-  TopBarComponent
 } from './_layout';
 
-import { DeviceService } from './_shared/services';
+import { DeviceResolver, DeviceService, DeviceListResolver } from './device/shared';
+import { AuthGuard } from './_guards';
+import { AuthModule } from './auth/auth.module';
+import { BACKEND_URL } from './_common/app.config';
 
 @NgModule({
   declarations: [
     AppComponent,
     NavMenuComponent,
     DeviceDetailComponent,
+    DeviceListCardComponent,
     DeviceListComponent,
-    TopBarComponent,
   ],
   imports: [
     BrowserModule,
+    HttpClientModule,
     RouterModule.forRoot(([
-      { path: '', redirectTo: 'device', pathMatch: 'full' },
-      { path: 'device', component: DeviceListComponent },
-      { path: 'service', component: DeviceListComponent },
-      { path: 'car', component: DeviceListComponent },
-      { path: 'owner', component: DeviceListComponent },
-      { path: 'auth', loadChildren: './auth/auth.module#AuthModule' },
+      { path: '', redirectTo: 'device', pathMatch: 'full'},
+      { path: 'device', component: DeviceListComponent, resolve: { devices: DeviceListResolver }, canActivate: [AuthGuard] },
+      { path: 'device/:id', component: DeviceDetailComponent, resolve: {device: DeviceResolver}, canActivate: [AuthGuard] },
+      { path: 'service', component: DeviceListComponent, resolve: {devices: DeviceListResolver}, canActivate: [AuthGuard] },
+      { path: 'car', component: DeviceListComponent, resolve: { devices: DeviceListResolver}, canActivate: [AuthGuard]},
+      { path: 'owner', component: DeviceListComponent, resolve: { devices: DeviceListResolver }, canActivate: [AuthGuard] },
+      { path: 'auth', loadChildren: './auth/auth.module#AuthModule'},
     ])),
     NgbModule.forRoot(),
-    HttpClientModule
+    AuthModule
   ],
-  providers: [DeviceService],
+  providers: [
+    DeviceService,
+    DeviceResolver,
+    DeviceListResolver,
+    AuthGuard,
+    { provide: BACKEND_URL, useValue: 'http://localhost:5001/api'}
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
